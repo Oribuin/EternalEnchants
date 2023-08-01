@@ -1,6 +1,6 @@
-package dev.rosewood.myplugin.manager;
+package xyz.oribuin.eternalenchants.manager;
 
-import dev.rosewood.myplugin.MyPlugin;
+import xyz.oribuin.eternalenchants.EternalEnchants;
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.config.CommentedFileConfiguration;
 import dev.rosewood.rosegarden.config.RoseSetting;
@@ -9,7 +9,7 @@ import dev.rosewood.rosegarden.manager.AbstractConfigurationManager;
 public class ConfigurationManager extends AbstractConfigurationManager {
 
     public enum Setting implements RoseSetting {
-        MY_SETTINGS("my-settings", "default-value", "This is a comment.", "This is another comment.");
+        ;
 
         private final String key;
         private final Object defaultValue;
@@ -49,7 +49,7 @@ public class ConfigurationManager extends AbstractConfigurationManager {
 
         @Override
         public CommentedFileConfiguration getBaseConfig() {
-            return MyPlugin.getInstance().getManager(ConfigurationManager.class).getConfig();
+            return EternalEnchants.getInstance().getManager(ConfigurationManager.class).getConfig();
         }
     }
 

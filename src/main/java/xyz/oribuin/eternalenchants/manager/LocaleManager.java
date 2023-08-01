@@ -1,4 +1,4 @@
-package dev.rosewood.myplugin.manager;
+package xyz.oribuin.eternalenchants.manager;
 
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.manager.AbstractLocaleManager;

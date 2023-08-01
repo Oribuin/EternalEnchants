@@ -1,6 +1,8 @@
-name: MyPlugin
-main: dev.rosewood.myplugin.MyPlugin
+name: EternalEnchants
+main: xyz.oribuin.eternalenchants.EternalEnchants
 version: '@version@'
 api-version: '1.16'
-author: Rosewood-Development
-description: A plugin that does stuff
+author: Oribuin
+description: Enchants :)
+loadbefore:
+  - Essentials

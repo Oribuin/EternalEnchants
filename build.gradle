@@ -6,7 +6,7 @@ plugins {
     id "maven-publish"
 }
 
-group = 'dev.rosewood'
+group = 'xyz.oribuin'
 version = '1.0-SNAPSHOT'
 
 java {
@@ -28,25 +28,24 @@ repositories {
     maven { url = "https://repo.rosewooddev.io/repository/public/" }
     maven { url = "https://repo.papermc.io/repository/maven-public/" }
     maven { url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/" }
+    maven { url = "https://hub.jeff-media.com/nexus/repository/jeff-media-public/" }
 }
 
 dependencies {
     api "dev.rosewood:rosegarden:${gardenVersion}"
-    api "dev.rosewood:guiframework:${guiVersion}"
+    api "com.jeff_media:MorePersistentDataTypes:2.4.0"
 
-    // Decide whether you want to use Spigot or Paper API (Paper is recommended)
     compileOnly "io.papermc.paper:paper-api:${spigotVersion}-R0.1-SNAPSHOT"
-//    compileOnly "org.spigotmc:spigot-api:${spigotVersion}-R0.1-SNAPSHOT"
 }
 
 shadowJar {
     archiveClassifier.set(null)
 
-    relocate("dev.rosewood.rosegarden", "${project.group}.myplugin.rosegarden")
-
-    // Remove comments if you're not using SQL/SQLite
-//    exclude 'dev/rosewood/rosegarden/lib/hikaricp/**/*.class'
-//    exclude 'dev/rosewood/rosegarden/lib/slf4j/**/*.class'
+    relocate("dev.rosewood.rosegarden", "${project.group}.eternalenchants.rosegarden")
+    relocate("com.jeff_media", "${project.group}.eternalenchants.jeffmedia")
+    
+    exclude 'dev/rosewood/rosegarden/lib/hikaricp/**/*.class'
+    exclude 'dev/rosewood/rosegarden/lib/slf4j/**/*.class'
 }
 
 // Include version replacement
@@ -63,9 +62,9 @@ publishing {
     publications {
         shadow(MavenPublication) { publication ->
             project.shadow.component(publication)
-            artifactId = "myplugin"
+            artifactId = "eternalenchants"
             pom {
-                name = "myplugin"
+                name = "eternalenchants"
             }
         }
     }

@@ -1,4 +1,3 @@
-// Only neccessary if you want to include NMS Modules
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -6,5 +5,5 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'RoseTemplate'
+rootProject.name = 'EternalEnchants'
 

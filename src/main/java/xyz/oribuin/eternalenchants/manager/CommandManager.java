@@ -1,6 +1,6 @@
-package dev.rosewood.myplugin.manager;
+package xyz.oribuin.eternalenchants.manager;
 
-import dev.rosewood.myplugin.command.ExampleCommandWrapper;
+import xyz.oribuin.eternalenchants.command.EnchantCommandWrapper;
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.command.framework.RoseCommandWrapper;
 import dev.rosewood.rosegarden.manager.AbstractCommandManager;
@@ -15,12 +15,12 @@ public class CommandManager extends AbstractCommandManager {
 
     @Override
     public List<Class<? extends RoseCommandWrapper>> getRootCommands() {
-        return List.of(ExampleCommandWrapper.class);
+        return List.of(EnchantCommandWrapper.class);
     }
 
     @Override
     public List<String> getArgumentHandlerPackages() {
-        return List.of("dev.rosewood.myplugin.command.argument");
+        return List.of("xyz.oribuin.eternalenchants.command.argument");
     }
 
 }
