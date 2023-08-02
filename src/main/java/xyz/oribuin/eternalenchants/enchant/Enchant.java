@@ -1,16 +1,12 @@
 package xyz.oribuin.eternalenchants.enchant;
 
-import dev.rosewood.rosegarden.config.CommentedConfigurationSection;
-import org.bukkit.entity.Player;
+import dev.rosewood.rosegarden.config.CommentedFileConfiguration;
+import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,15 +14,18 @@ import java.util.List;
 public abstract class Enchant implements Listener {
 
     private final String id; // The id of the enchantment
+    protected String description; // The description of the enchantment
+    protected CommentedFileConfiguration config; // The config of the enchantment
     private List<EnchantTarget> targets; // The targets of the enchantment
     private int maxLevel; // The max level of the enchantment
-    private boolean pvpOnly; // If the enchantment can only be applied to players vs players
 
-    public Enchant(String id, EnchantTarget... targets) {
+    public Enchant(String id, EnchantTarget target, EnchantTarget... targets) {
         this.id = id;
-        this.targets = new ArrayList<>(Arrays.asList(targets));
+        this.description = "A custom enchantment.";
+        this.targets = new ArrayList<>(List.of(target));
+        this.targets.addAll(Arrays.asList(targets));
         this.maxLevel = 1;
-        this.pvpOnly = false;
+        this.config = null;
     }
 
     /**
@@ -35,18 +34,49 @@ public abstract class Enchant implements Listener {
     public abstract void run(ContextHandler context);
 
     /**
-     * Load all the values from the config
+     * Register the enchantment config file
      *
-     * @param config The config to load from
+     * @param primaryFolder The folder to register the config to
      */
-    public abstract void load(CommentedConfigurationSection config);
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public final void register(File primaryFolder) {
+        File file = new File(primaryFolder, this.id.toLowerCase() + ".yml");
+        boolean newFile = false;
+
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+                newFile = true;
+            }
+
+            CommentedFileConfiguration config = CommentedFileConfiguration.loadConfiguration(file);
+            this.config = config;
+
+            // Create the enchant config if needed.
+            if (newFile || config.getKeys(false).isEmpty()) {
+                this.set();
+            }
+
+            // Load the enchant config
+            this.load();
+
+            config.save(file);
+
+            this.config = config;
+        } catch (IOException ignored) {
+            Bukkit.getLogger().severe("Unable to create enchant config for " + this.id + "!");
+        }
+    }
+
+    /**
+     * Load all the values from the config
+     */
+    public abstract void load();
 
     /**
      * Set all the values to the config
-     *
-     * @param config The config to set to
      */
-    public abstract void set(CommentedConfigurationSection config);
+    public abstract void set();
 
     /**
      * Check if the enchantment can be applied to the item
@@ -76,14 +106,6 @@ public abstract class Enchant implements Listener {
 
     public void setMaxLevel(int maxLevel) {
         this.maxLevel = maxLevel;
-    }
-
-    public boolean isPvpOnly() {
-        return pvpOnly;
-    }
-
-    public void setPvpOnly(boolean pvpOnly) {
-        this.pvpOnly = pvpOnly;
     }
 
 }

@@ -2,85 +2,89 @@ package xyz.oribuin.eternalenchants.manager;
 
 import com.jeff_media.morepersistentdatatypes.DataType;
 import dev.rosewood.rosegarden.RosePlugin;
-import dev.rosewood.rosegarden.config.CommentedFileConfiguration;
 import dev.rosewood.rosegarden.manager.Manager;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import xyz.oribuin.eternalenchants.EternalEnchants;
+import xyz.oribuin.eternalenchants.enchant.ContextHandler;
 import xyz.oribuin.eternalenchants.enchant.Enchant;
 import xyz.oribuin.eternalenchants.enchant.impl.ExplodeEnchant;
+import xyz.oribuin.eternalenchants.enchant.impl.SmeltEnchant;
+import xyz.oribuin.eternalenchants.enchant.impl.TurboBreakerEnchant;
+import xyz.oribuin.eternalenchants.event.EnchantLoadingEvent;
+import xyz.oribuin.eternalenchants.manager.ConfigurationManager.Setting;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class EnchantManager extends Manager {
+public class EnchantManager extends Manager implements Listener {
 
-    private final Map<String, Enchant> enchants = new HashMap<>();
     private static final NamespacedKey ENCHANTS_KEY = new NamespacedKey(EternalEnchants.getInstance(), "enchants");
+    private final Map<String, Enchant> enchants = new HashMap<>();
 
     public EnchantManager(RosePlugin rosePlugin) {
         super(rosePlugin);
+
+        this.rosePlugin.getServer().getPluginManager().registerEvents(this, this.rosePlugin);
     }
 
     @Override
     public void reload() {
+        EnchantLoadingEvent event = new EnchantLoadingEvent();
+        Bukkit.getPluginManager().callEvent(event);
+
         File folder = new File(this.rosePlugin.getDataFolder(), "enchants");
         if (!folder.exists())
             folder.mkdirs();
 
-        // Register all the enchantments
-        this.enchants.put("explode", new ExplodeEnchant());
+        event.getRegisteredEnchants().forEach((s, enchant) -> {
+            // Don't register the enchant if it's disabled
+            if (Setting.DISABLED_ENCHANTS.getStringList().contains(enchant.getId()))
+                return;
 
-        // Load all the enchant configs
-        for (Map.Entry<String, Enchant> enchants : new HashMap<>(this.enchants).entrySet()) {
-            Enchant enchant = enchants.getValue();
-            File file = new File(folder, enchants.getKey() + ".yml");
-            boolean newFile = false;
-
-            try {
-                if (!file.exists()) {
-                    file.createNewFile();
-                    newFile = true;
-                }
-
-                CommentedFileConfiguration config = CommentedFileConfiguration.loadConfiguration(file);
-
-                // Create the enchant config if needed.
-                if (newFile) {
-                    enchant.set(config);
-                }
-
-                // Load the enchant config
-                enchant.load(config);
-                config.save(file);
-            } catch (IOException ignored) {
-                this.rosePlugin.getLogger().severe("Unable to create enchant config for " + enchants.getKey() + "!");
-            }
-        }
+            // Register the enchant
+            enchant.register(folder);
+            this.enchants.put(s, enchant);
+        });
     }
 
     /**
-     * Run all the enchants for an item
+     * Load all the enchants from the config
      *
-     * @param itemStack The item to run the enchants for
+     * @param event The event
      */
-    public void runEnchants(ItemStack itemStack, Consumer<Enchant> consumer) {
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLoad(EnchantLoadingEvent event) {
+        event.registerEnchant(new ExplodeEnchant());
+        event.registerEnchant(new SmeltEnchant());
+        event.registerEnchant(new TurboBreakerEnchant());
+    }
+
+    /**
+     * Run enchantments for an item
+     *
+     * @param handler The context handler
+     */
+    public void runEnchants(ContextHandler handler) {
+        ItemStack itemStack = handler.itemStack();
+
+        // Check if the item has enchants
         for (Enchant enchant : this.getEnchants(itemStack)) {
             if (!enchant.isApplicable(itemStack))
                 continue;
 
-            if (!this.hasEnchant(itemStack, enchant.getId()))
-                continue;
-
-            consumer.accept(enchant);
+            enchant.run(handler);
         }
     }
 

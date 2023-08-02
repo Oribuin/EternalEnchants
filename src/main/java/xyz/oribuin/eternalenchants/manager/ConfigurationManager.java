@@ -1,14 +1,27 @@
 package xyz.oribuin.eternalenchants.manager;
 
-import xyz.oribuin.eternalenchants.EternalEnchants;
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.config.CommentedFileConfiguration;
 import dev.rosewood.rosegarden.config.RoseSetting;
 import dev.rosewood.rosegarden.manager.AbstractConfigurationManager;
+import xyz.oribuin.eternalenchants.EternalEnchants;
+
+import java.util.ArrayList;
 
 public class ConfigurationManager extends AbstractConfigurationManager {
 
+    public ConfigurationManager(RosePlugin rosePlugin) {
+        super(rosePlugin, Setting.class);
+    }
+
+    @Override
+    protected String[] getHeader() {
+        return new String[]{};
+    }
+
     public enum Setting implements RoseSetting {
+        DISABLED_ENCHANTS("disabled-enchants", new ArrayList<String>(), "A list of enchantments that are disabled."),
+
         ;
 
         private final String key;
@@ -51,14 +64,5 @@ public class ConfigurationManager extends AbstractConfigurationManager {
         public CommentedFileConfiguration getBaseConfig() {
             return EternalEnchants.getInstance().getManager(ConfigurationManager.class).getConfig();
         }
-    }
-
-    public ConfigurationManager(RosePlugin rosePlugin) {
-        super(rosePlugin, Setting.class);
-    }
-
-    @Override
-    protected String[] getHeader() {
-        return new String[]{};
     }
 }

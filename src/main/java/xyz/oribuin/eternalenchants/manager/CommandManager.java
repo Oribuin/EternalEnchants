@@ -1,9 +1,9 @@
 package xyz.oribuin.eternalenchants.manager;
 
-import xyz.oribuin.eternalenchants.command.EnchantCommandWrapper;
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.command.framework.RoseCommandWrapper;
 import dev.rosewood.rosegarden.manager.AbstractCommandManager;
+import xyz.oribuin.eternalenchants.command.EnchantCommandWrapper;
 
 import java.util.List;
 

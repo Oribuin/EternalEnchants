@@ -1,9 +1,10 @@
 package xyz.oribuin.eternalenchants.enchant.impl;
 
-import dev.rosewood.rosegarden.config.CommentedConfigurationSection;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.Statistic;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import xyz.oribuin.eternalenchants.enchant.ContextHandler;
@@ -17,6 +18,8 @@ public class ExplodeEnchant extends Enchant {
 
     public ExplodeEnchant() {
         super("explode", EnchantTarget.PICKAXE, EnchantTarget.SHOVEL, EnchantTarget.AXE);
+
+        this.description = "Explodes blocks around the broken block.";
     }
 
     @Override
@@ -24,7 +27,7 @@ public class ExplodeEnchant extends Enchant {
         BlockBreakEvent event = context.as(BlockBreakEvent.class);
         if (event == null) return;
 
-        if (Math.random() * 100 >= this.triggerChance)
+        if (this.triggerChance != 100 && Math.random() * 100 >= this.triggerChance)
             return;
 
         // Destroy blocks nearby the broken block
@@ -41,7 +44,13 @@ public class ExplodeEnchant extends Enchant {
                     if (relative.getType().isAir() || relative.isLiquid())
                         continue;
 
-                    event.getBlock().getRelative(x, y, z).breakNaturally(item);
+                    // TODO: Maybe look into a way to make this more efficient, Block#breakNaturally() is so slow
+                    if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
+                        relative.setType(Material.AIR);
+                    else
+                        relative.breakNaturally(item);
+
+                    event.getPlayer().incrementStatistic(Statistic.MINE_BLOCK, relative.getType());
                 }
             }
         }
@@ -49,15 +58,15 @@ public class ExplodeEnchant extends Enchant {
     }
 
     @Override
-    public void load(CommentedConfigurationSection config) {
-        this.triggerChance = config.getDouble("trigger-chance", this.triggerChance);
-        this.explodeRadius = config.getInt("explode-radius", this.explodeRadius);
+    public void load() {
+        this.triggerChance = this.config.getDouble("trigger-chance", this.triggerChance);
+        this.explodeRadius = this.config.getInt("explode-radius", this.explodeRadius);
     }
 
     @Override
-    public void set(CommentedConfigurationSection config) {
-        config.set("trigger-chance", this.triggerChance);
-        config.set("explode-radius", this.explodeRadius);
+    public void set() {
+        this.config.set("trigger-chance", this.triggerChance);
+        this.config.set("explode-radius", this.explodeRadius);
     }
 
 }
