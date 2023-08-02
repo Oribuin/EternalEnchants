@@ -2,6 +2,7 @@ package xyz.oribuin.eternalenchants.manager;
 
 import com.jeff_media.morepersistentdatatypes.DataType;
 import dev.rosewood.rosegarden.RosePlugin;
+import dev.rosewood.rosegarden.config.CommentedFileConfiguration;
 import dev.rosewood.rosegarden.manager.Manager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
@@ -13,6 +14,7 @@ import xyz.oribuin.eternalenchants.enchant.Enchant;
 import xyz.oribuin.eternalenchants.enchant.impl.ExplodeEnchant;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +37,34 @@ public class EnchantManager extends Manager {
             folder.mkdirs();
 
         // Register all the enchantments
-        this.enchants.clear();
         this.enchants.put("explode", new ExplodeEnchant());
+
+        // Load all the enchant configs
+        for (Map.Entry<String, Enchant> enchants : new HashMap<>(this.enchants).entrySet()) {
+            Enchant enchant = enchants.getValue();
+            File file = new File(folder, enchants.getKey() + ".yml");
+            boolean newFile = false;
+
+            try {
+                if (!file.exists()) {
+                    file.createNewFile();
+                    newFile = true;
+                }
+
+                CommentedFileConfiguration config = CommentedFileConfiguration.loadConfiguration(file);
+
+                // Create the enchant config if needed.
+                if (newFile) {
+                    enchant.set(config);
+                }
+
+                // Load the enchant config
+                enchant.load(config);
+                config.save(file);
+            } catch (IOException ignored) {
+                this.rosePlugin.getLogger().severe("Unable to create enchant config for " + enchants.getKey() + "!");
+            }
+        }
     }
 
     /**
@@ -153,7 +181,7 @@ public class EnchantManager extends Manager {
 
     @Override
     public void disable() {
-
+        this.enchants.clear();
     }
 
     public Map<String, Enchant> getEnchants() {
