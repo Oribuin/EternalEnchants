@@ -16,12 +16,14 @@ public abstract class Enchant implements Listener {
     private final String id; // The id of the enchantment
     protected String description; // The description of the enchantment
     protected CommentedFileConfiguration config; // The config of the enchantment
-    private List<EnchantTarget> targets; // The targets of the enchantment
-    private int maxLevel; // The max level of the enchantment
+    protected Priority priority; // The priority of the enchantment
+    protected List<EnchantTarget> targets; // The targets of the enchantment
+    protected int maxLevel; // The max level of the enchantment
 
     public Enchant(String id, EnchantTarget target, EnchantTarget... targets) {
         this.id = id;
         this.description = "A custom enchantment.";
+        this.priority = Priority.NORMAL;
         this.targets = new ArrayList<>(List.of(target));
         this.targets.addAll(Arrays.asList(targets));
         this.maxLevel = 1;

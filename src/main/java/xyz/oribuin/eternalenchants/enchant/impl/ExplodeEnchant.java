@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import xyz.oribuin.eternalenchants.enchant.ContextHandler;
 import xyz.oribuin.eternalenchants.enchant.Enchant;
 import xyz.oribuin.eternalenchants.enchant.EnchantTarget;
+import xyz.oribuin.eternalenchants.enchant.Priority;
 
 public class ExplodeEnchant extends Enchant {
 
@@ -20,6 +21,7 @@ public class ExplodeEnchant extends Enchant {
         super("explode", EnchantTarget.PICKAXE, EnchantTarget.SHOVEL, EnchantTarget.AXE);
 
         this.description = "Explodes blocks around the broken block.";
+        this.priority = Priority.HIGHEST; // This enchant should be the first to run
     }
 
     @Override
