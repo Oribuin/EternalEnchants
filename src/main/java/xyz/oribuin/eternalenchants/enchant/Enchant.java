@@ -42,7 +42,7 @@ public abstract class Enchant implements Listener {
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public final void register(File primaryFolder) {
-        File file = new File(primaryFolder, this.id.toLowerCase() + ".yml");
+        final File file = new File(primaryFolder, this.id.toLowerCase() + ".yml");
         boolean newFile = false;
 
         try {
@@ -51,7 +51,7 @@ public abstract class Enchant implements Listener {
                 newFile = true;
             }
 
-            CommentedFileConfiguration config = CommentedFileConfiguration.loadConfiguration(file);
+            final CommentedFileConfiguration config = CommentedFileConfiguration.loadConfiguration(file);
             this.config = config;
 
             // Create the enchant config if needed.
@@ -63,7 +63,6 @@ public abstract class Enchant implements Listener {
             this.load();
 
             config.save(file);
-
             this.config = config;
         } catch (IOException ignored) {
             Bukkit.getLogger().severe("Unable to create enchant config for " + this.id + "!");
@@ -73,12 +72,20 @@ public abstract class Enchant implements Listener {
     /**
      * Load all the values from the config
      */
-    public abstract void load();
+    public void load() {
+        // Unused by default
+    }
 
     /**
      * Set all the values to the config
      */
-    public abstract void set();
+    public void set() {
+//        this.config.addComments(
+//                "EternalEnchants - Enchantment Config",
+//                "Default configuration file for " + this.id.replace("_", " ") + ".",
+//                this.description
+//        );
+    }
 
     /**
      * Check if the enchantment can be applied to the item
@@ -108,6 +115,22 @@ public abstract class Enchant implements Listener {
 
     public void setMaxLevel(int maxLevel) {
         this.maxLevel = maxLevel;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
 }

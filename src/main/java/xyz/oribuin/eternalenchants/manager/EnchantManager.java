@@ -3,13 +3,19 @@ package xyz.oribuin.eternalenchants.manager;
 import com.jeff_media.morepersistentdatatypes.DataType;
 import dev.rosewood.rosegarden.RosePlugin;
 import dev.rosewood.rosegarden.manager.Manager;
+import dev.rosewood.rosegarden.utils.NMSUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import xyz.oribuin.eternalenchants.EternalEnchants;
@@ -26,11 +32,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 public class EnchantManager extends Manager implements Listener {
 
     private static final NamespacedKey ENCHANTS_KEY = new NamespacedKey(EternalEnchants.getInstance(), "enchants");
+    private static final Random RANDOM = new Random();
     private final Map<String, Enchant> enchants = new HashMap<>();
 
     public EnchantManager(RosePlugin rosePlugin) {
@@ -41,10 +49,10 @@ public class EnchantManager extends Manager implements Listener {
 
     @Override
     public void reload() {
-        EnchantLoadingEvent event = new EnchantLoadingEvent();
+        final EnchantLoadingEvent event = new EnchantLoadingEvent();
         Bukkit.getPluginManager().callEvent(event);
 
-        File folder = new File(this.rosePlugin.getDataFolder(), "enchants");
+        final File folder = new File(this.rosePlugin.getDataFolder(), "enchants");
         if (!folder.exists())
             folder.mkdirs();
 
@@ -77,10 +85,18 @@ public class EnchantManager extends Manager implements Listener {
      * @param handler The context handler
      */
     public void runEnchants(ContextHandler handler) {
-        ItemStack itemStack = handler.itemStack();
+        final ItemStack itemStack = handler.itemStack();
 
         // Check if the item has enchants
-        for (Enchant enchant : this.getEnchants(itemStack)) {
+
+        List<Enchant> enchants = this.getEnchants(itemStack);
+        if (enchants.isEmpty())
+            return;
+
+        // Sort the enchants by priority
+        enchants.sort((e1, e2) -> e2.getPriority().compareTo(e1.getPriority()));
+
+        for (final Enchant enchant : enchants) {
             if (!enchant.isApplicable(itemStack))
                 continue;
 
@@ -96,17 +112,19 @@ public class EnchantManager extends Manager implements Listener {
      * @return If the enchant was applied
      */
     public boolean apply(ItemStack itemStack, Enchant enchant) {
-        ItemMeta meta = itemStack.getItemMeta();
+        final ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return false;
 
         // Make sure the enchant exists and is applicable
         if (enchant == null || !enchant.isApplicable(itemStack))
             return false;
 
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-        List<String> enchants = container.get(ENCHANTS_KEY, DataType.asList(DataType.STRING));
-        if (enchants == null)
-            enchants = new ArrayList<>();
+        final PersistentDataContainer container = meta.getPersistentDataContainer();
+        List<String> enchants = container.getOrDefault(
+                ENCHANTS_KEY,
+                DataType.asList(DataType.STRING),
+                new ArrayList<>()
+        );
 
         if (enchants.contains(enchant.getId()))
             return false;
@@ -114,8 +132,9 @@ public class EnchantManager extends Manager implements Listener {
         // Copy and modify the list
         enchants.add(enchant.getId());
 
+        // TODO: Make spigot compatible
         container.set(ENCHANTS_KEY, DataType.asList(DataType.STRING), enchants);
-        itemStack.lore(List.of(Component.text("Enchantments: " + enchants)));
+        meta.lore(List.of(Component.text("Enchantments: " + enchants)));
         itemStack.setItemMeta(meta);
         return true;
     }
@@ -128,11 +147,11 @@ public class EnchantManager extends Manager implements Listener {
      * @return if the item has the enchant
      */
     public boolean hasEnchant(ItemStack itemStack, String enchant) {
-        ItemMeta meta = itemStack.getItemMeta();
+        final ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return false;
 
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-        List<String> enchants = container.get(ENCHANTS_KEY, DataType.asList(DataType.STRING));
+        final PersistentDataContainer container = meta.getPersistentDataContainer();
+        final List<String> enchants = container.get(ENCHANTS_KEY, DataType.asList(DataType.STRING));
         if (enchants == null || enchants.isEmpty())
             return false;
 
@@ -147,10 +166,10 @@ public class EnchantManager extends Manager implements Listener {
      * @return if the enchant was stripped
      */
     public boolean strip(ItemStack itemStack, String enchant) {
-        ItemMeta meta = itemStack.getItemMeta();
+        final ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return false;
 
-        PersistentDataContainer container = meta.getPersistentDataContainer();
+        final PersistentDataContainer container = meta.getPersistentDataContainer();
         List<String> enchants = container.get(ENCHANTS_KEY, DataType.asList(DataType.STRING));
         if (enchants == null || enchants.isEmpty())
             return false;
@@ -171,16 +190,56 @@ public class EnchantManager extends Manager implements Listener {
      * @return the enchants on the item
      */
     public List<Enchant> getEnchants(ItemStack itemStack) {
-        ItemMeta meta = itemStack.getItemMeta();
+        final ItemMeta meta = itemStack.getItemMeta();
         if (meta == null)
-            return List.of();
+            return new ArrayList<>();
 
-        PersistentDataContainer container = meta.getPersistentDataContainer();
-        List<String> enchants = container.get(ENCHANTS_KEY, DataType.asList(DataType.STRING));
+        final PersistentDataContainer container = meta.getPersistentDataContainer();
+        final List<String> enchants = container.get(ENCHANTS_KEY, DataType.asList(DataType.STRING));
         if (enchants == null || enchants.isEmpty())
-            return List.of();
+            return new ArrayList<>();
 
-        return this.enchants.values().stream().filter(enchant -> enchants.contains(enchant.getId())).toList();
+        return this.enchants.values()
+                .stream()
+                .filter(enchant -> enchants.contains(enchant.getId()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Take durability off an item
+     *
+     * @param player Who is damaging the item
+     * @param stack  The item to damage
+     */
+    public void damage(final Player player, final ItemStack stack) {
+        if (!(stack instanceof Damageable damageable) || damageable.isUnbreakable())
+            return;
+
+        if (NMSUtil.isPaper()) {
+            player.damageItemStack(stack, 1);
+            return;
+        }
+
+        final int level = stack.getEnchantmentLevel(Enchantment.DURABILITY);
+        final int percentage = level == 0 ? 100 : (100 / (level + 1));
+
+        if (percentage >= RANDOM.nextDouble(0, 100)) {
+            damageable.setDamage(damageable.getDamage() + 1);
+            stack.setItemMeta(damageable);
+        }
+    }
+
+    /**
+     * Spawn an experience orb at a block
+     *
+     * @param block The block to spawn the orb at
+     */
+    public void createEXP(final Block block) {
+        block.getWorld().spawn(
+                block.getLocation(),
+                ExperienceOrb.class,
+                orb -> orb.setExperience(RANDOM.nextInt(1, 6))
+        );
     }
 
     @Override

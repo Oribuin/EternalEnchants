@@ -19,10 +19,11 @@ public class ApplyCommand extends RoseCommand {
 
     @RoseExecutable
     public void execute(CommandContext context, Enchant enchant) {
-        Player player = (Player) context.getSender();
-        ItemStack item = player.getInventory().getItemInMainHand();
-        EnchantManager manager = this.rosePlugin.getManager(EnchantManager.class);
+        final Player player = (Player) context.getSender();
+        final ItemStack item = player.getInventory().getItemInMainHand();
+        final EnchantManager manager = this.rosePlugin.getManager(EnchantManager.class);
 
+        // TODO: Make spigot compatible
         if (manager.apply(item, enchant)) {
             player.sendMessage(Component.text("Successfully applied enchantment."));
             return;

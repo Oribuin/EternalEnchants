@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'xyz.oribuin'
-version = '1.0-SNAPSHOT'
+version = '1.0'
 
 java {
     toolchain {
@@ -34,8 +34,10 @@ repositories {
 dependencies {
     api "dev.rosewood:rosegarden:${gardenVersion}"
     api "com.jeff_media:MorePersistentDataTypes:2.4.0"
+    api 'org.jetbrains:annotations:24.0.0'
 
     compileOnly "io.papermc.paper:paper-api:${spigotVersion}-R0.1-SNAPSHOT"
+//    compileOnly "org.spigotmc:spigot-api:${spigotVersion}-R0.1-SNAPSHOT"
 }
 
 shadowJar {
