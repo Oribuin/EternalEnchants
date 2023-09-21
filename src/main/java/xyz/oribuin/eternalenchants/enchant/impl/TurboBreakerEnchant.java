@@ -45,7 +45,7 @@ public class TurboBreakerEnchant extends Enchant {
             return;
 
         // Check if the cooldown has passed
-        if (System.currentTimeMillis() - data.getLastTriggered() < (this.cooldown / 20 * 1000))
+        if (System.currentTimeMillis() - data.getLastTriggered() < this.cooldown * 1000)
             return;
 
         // Chance to trigger the effect
