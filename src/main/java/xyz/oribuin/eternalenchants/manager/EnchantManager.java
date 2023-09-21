@@ -29,6 +29,7 @@ import xyz.oribuin.eternalenchants.manager.ConfigurationManager.Setting;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,21 +88,23 @@ public class EnchantManager extends Manager implements Listener {
     public void runEnchants(ContextHandler handler) {
         final ItemStack itemStack = handler.itemStack();
 
-        // Check if the item has enchants
-
-        List<Enchant> enchants = this.getEnchants(itemStack);
+        // Get all the enchants on the item
+        final List<Enchant> enchants = this.getEnchants(itemStack);
         if (enchants.isEmpty())
             return;
 
         // Sort the enchants by priority
-        enchants.sort((e1, e2) -> e2.getPriority().compareTo(e1.getPriority()));
+        enchants.sort(Comparator.comparingInt(value -> value.getPriority().getOrder()));
+//        enchants.sort((e1, e2) -> e2.getPriority().compareTo(e1.getPriority()));
 
+        // Run the enchants
         for (final Enchant enchant : enchants) {
             if (!enchant.isApplicable(itemStack))
                 continue;
 
             enchant.run(handler);
         }
+
     }
 
     /**
@@ -212,7 +215,8 @@ public class EnchantManager extends Manager implements Listener {
      * @param stack  The item to damage
      */
     public void damage(final Player player, final ItemStack stack) {
-        if (!(stack instanceof Damageable damageable) || damageable.isUnbreakable())
+        final ItemMeta meta = stack.getItemMeta();
+        if (!(meta instanceof Damageable damageable) || damageable.isUnbreakable())
             return;
 
         if (NMSUtil.isPaper()) {

@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import xyz.oribuin.eternalenchants.enchant.ContextHandler;
 import xyz.oribuin.eternalenchants.enchant.Enchant;
 import xyz.oribuin.eternalenchants.enchant.EnchantTarget;
+import xyz.oribuin.eternalenchants.enchant.Priority;
+import xyz.oribuin.eternalenchants.event.EnchantExplodeEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,39 +29,71 @@ public class SmeltEnchant extends Enchant {
         super("smelt", EnchantTarget.PICKAXE);
 
         this.description = "Smelts any blocks broken.";
+        this.priority = Priority.LOWEST;
         this.toSmelt = Sets.newConcurrentHashSet();
         this.materialMapping = new HashMap<>();
     }
 
     @Override
     public void run(ContextHandler context) {
-        // TODO: Support explode enchant
         final BlockBreakEvent breakEvent = context.as(BlockBreakEvent.class);
-
         if (breakEvent != null) {
-            if (breakEvent.getPlayer().getGameMode() == GameMode.CREATIVE)
-                return;
+            this.onBreak(breakEvent);
+        }
 
-            this.toSmelt.add(breakEvent.getBlock());
-            return;
+        final EnchantExplodeEvent explodeEvent = context.as(EnchantExplodeEvent.class);
+        if (explodeEvent != null) {
+            this.onExplode(explodeEvent);
         }
 
         final BlockDropItemEvent dropEvent = context.as(BlockDropItemEvent.class);
-        if (dropEvent == null)
+        if (dropEvent != null) {
+            this.onBlockDrop(dropEvent);
+        }
+    }
+
+    /**
+     * List all the blocks to smelt
+     *
+     * @param event The block break event
+     */
+    private void onExplode(EnchantExplodeEvent event) {
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
 
-        if (!this.toSmelt.remove(dropEvent.getBlock()))
+        this.toSmelt.addAll(event.getToExplode());
+    }
+
+    /**
+     * List all the blocks to smelt
+     *
+     * @param event The block break event
+     */
+    private void onBreak(BlockBreakEvent event) {
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
 
-        for (final Item item : dropEvent.getItems()) {
+        this.toSmelt.add(event.getBlock());
+    }
+
+    /**
+     * Modifies the items being dropped
+     *
+     * @param event The block drop event
+     */
+    private void onBlockDrop(BlockDropItemEvent event) {
+        if (!this.toSmelt.remove(event.getBlock()))
+            return;
+
+        for (final Item item : event.getItems()) {
             final Material smelted = this.getSmelted(item.getItemStack().getType());
             if (smelted == item.getItemStack().getType())
                 continue;
 
             item.setItemStack(new ItemStack(smelted, item.getItemStack().getAmount()));
         }
-
     }
+
 
     /**
      * Get the smelted material

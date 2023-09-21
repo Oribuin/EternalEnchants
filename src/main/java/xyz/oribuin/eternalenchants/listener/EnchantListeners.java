@@ -31,19 +31,12 @@ public class EnchantListeners implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
-    public void onDrop(BlockDropItemEvent event) {
-        this.manager.runEnchants(new ContextHandler(event, event.getPlayer().getInventory().getItemInMainHand(), event.getPlayer()));
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onExplode(EnchantExplodeEvent event) {
         final ItemStack tool = event.getPlayer().getInventory().getItemInMainHand();
         this.manager.runEnchants(new ContextHandler(event, tool, event.getPlayer()));
-        this.manager.damage(event.getPlayer(), tool);
-
 
         for (final Block block : event.getToExplode()) {
-            // Simulate the natural block generation of the block
+            // Simulate the natural block destruction
             if (NMSUtil.isPaper()) {
 
                 // If the block is air, don't do anything
@@ -51,6 +44,7 @@ public class EnchantListeners implements Listener {
 
                     // If the player is in creative mode, don't damage the tool
                     if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
+                        System.out.println("DAMAGING TOOL");
                         this.manager.damage(event.getPlayer(), tool);
                     }
                 }
@@ -72,5 +66,9 @@ public class EnchantListeners implements Listener {
 
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    public void onDrop(BlockDropItemEvent event) {
+        this.manager.runEnchants(new ContextHandler(event, event.getPlayer().getInventory().getItemInMainHand(), event.getPlayer()));
+    }
 
 }

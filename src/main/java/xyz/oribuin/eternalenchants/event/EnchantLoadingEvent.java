@@ -27,9 +27,8 @@ public class EnchantLoadingEvent extends Event {
      * Register an enchant to be loaded
      *
      * @param enchant The enchant to register
-     * @return true if registering the enchant overwrote an existing enchant, false otherwise
      */
-    public boolean registerEnchant(Enchant enchant) {
+    public void registerEnchant(Enchant enchant) {
         Objects.requireNonNull(enchant, "Enchant cannot be null for enchant: " + enchant.getId());
         Objects.requireNonNull(enchant.getId(), "Enchant ID cannot be null for enchant: " + enchant.getId());
 
@@ -37,7 +36,11 @@ public class EnchantLoadingEvent extends Event {
             throw new IllegalArgumentException("You must specify at least one target for the enchant: " + enchant.getId());
         }
 
-        return this.registeredEnchants.put(enchant.getId(), enchant) != null;
+        if (this.registeredEnchants.containsKey(enchant.getId())) {
+            throw new IllegalArgumentException("Enchant with id: " + enchant.getId() + " is already registered.");
+        }
+
+        this.registeredEnchants.put(enchant.getId(), enchant);
     }
 
     @NotNull

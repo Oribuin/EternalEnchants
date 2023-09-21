@@ -81,8 +81,6 @@ public class ExplodeEnchant extends Enchant {
 
     @Override
     public void load() {
-        super.load();
-
         this.triggerChance = this.config.getDouble("trigger-chance", this.triggerChance);
         this.explodeRadius = this.config.getInt("explode-radius", this.explodeRadius);
         this.blacklisted = this.config.getStringList("blacklisted").stream()
@@ -93,8 +91,6 @@ public class ExplodeEnchant extends Enchant {
 
     @Override
     public void set() {
-        super.set();
-
         this.config.set("trigger-chance", this.triggerChance);
         this.config.set("explode-radius", this.explodeRadius);
         this.config.set("blacklisted", this.blacklisted.stream().map(Enum::name).collect(Collectors.toList()));

@@ -56,6 +56,7 @@ public abstract class Enchant implements Listener {
 
             // Create the enchant config if needed.
             if (newFile || config.getKeys(false).isEmpty()) {
+                this.setDefault();
                 this.set();
             }
 
@@ -69,23 +70,28 @@ public abstract class Enchant implements Listener {
         }
     }
 
+
+    /**
+     * Set the default values for the enchantment config
+     * <p>
+     * Only to be used if the config is empty
+     */
+    public void setDefault() {
+        this.config.addComments(
+                "EternalEnchants - " + this.id.replace("_", " ") + " Enchantment",
+                " ",
+                this.description);
+    }
+
     /**
      * Load all the values from the config
      */
-    public void load() {
-        // Unused by default
-    }
+    public abstract void load();
 
     /**
      * Set all the values to the config
      */
-    public void set() {
-//        this.config.addComments(
-//                "EternalEnchants - Enchantment Config",
-//                "Default configuration file for " + this.id.replace("_", " ") + ".",
-//                this.description
-//        );
-    }
+    public abstract void set();
 
     /**
      * Check if the enchantment can be applied to the item
